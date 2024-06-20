@@ -108,9 +108,9 @@ def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requ
                 temp_module_path, force=True, legacy=True, optimize=2)
             _delete_py_source(temp_module_path)
             python_version_tuple = platform.python_version_tuple()
-            first = python_version_tuple[0]
-            seconde = python_version_tuple[1]
-            pyz_name = f"{module_name}-py{first}.{seconde}"
+            major = python_version_tuple[0]
+            minor = python_version_tuple[1]
+            pyz_name = f"{module_name}-py{major}.{minor}"
         if with_requirements:
             command = f'python -m pip install -r {with_requirements} --target temp_app'
             default_environ = dict(os.environ)
