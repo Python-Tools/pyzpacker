@@ -7,7 +7,7 @@ import platform
 import subprocess
 import chardet
 from pathlib import Path
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, Iterable
 
 
 def delete_source(root_path: Path, *,
@@ -51,10 +51,9 @@ def delete_source(root_path: Path, *,
                     print(f"rmtree {p} get error {str(e)}")
             else:
                 # 文件夹-继续遍历
+                iterdir: Iterable[Path] = p.iterdir()
                 if dir_iter_filter:
                     iterdir = filter(dir_iter_filter, p.iterdir())
-                else:
-                    iterdir = p.iterdir()
                 for child_path in iterdir:
                     _delete_source(child_path)
     if any([callable(file_predication), callable(dir_predication)]):
@@ -126,11 +125,14 @@ def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requ
                 print(f"""命令: {command} 执行失败""")
                 if ce.stderr:
                     encoding = chardet.detect(ce.stderr).get("encoding")
-                    content = ce.stderr.decode(encoding).strip()
+                    if encoding:
+                        content = ce.stderr.decode(encoding).strip()
+                        print(content)
                 else:
                     encoding = chardet.detect(ce.stdout).get("encoding")
-                    content = ce.stdout.decode(encoding).strip()
-                    print(content)
+                    if encoding:
+                        content = ce.stdout.decode(encoding).strip()
+                        print(content)
                 raise ce
             except Exception as e:
                 print(f"""命令: {command} 执行失败""")
@@ -139,8 +141,9 @@ def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requ
                 content = ""
                 if res.stdout:
                     encoding = chardet.detect(res.stdout).get("encoding")
-                    content = res.stdout.decode(encoding).strip()
-                    print(content)
+                    if encoding:
+                        content = res.stdout.decode(encoding).strip()
+                        print(content)
         target = output_dir.joinpath(f"{pyz_name}.pyz")
         zipapp.create_archive(
             temp_path,
