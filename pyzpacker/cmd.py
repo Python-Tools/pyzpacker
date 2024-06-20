@@ -19,9 +19,11 @@ def main() -> None:
     parser.add_argument("-v", "--version", help="查看pyzpacker版本号",
                         action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
-    pyzpacker(args.source, args.main,
-              output=args.output, 
-              with_requirements=args.with_requirements, 
-              with_compress=args.with_compress,
-              with_interpreter=args.with_interpreter,
-              with_compile=args.with_compile)
+    pyzpacker(
+        args.source,
+        args.main,
+        output=args.output,
+        with_requirements=args.with_requirements,
+        with_compress=args.with_compress,
+        with_interpreter=args.with_interpreter,
+        with_compile=args.with_compile)

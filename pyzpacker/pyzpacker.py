@@ -69,7 +69,7 @@ def _delete_py_source(root_path: Path) -> None:
     )
 
 
-def pyzpacker(source: str, main: str, *, output: Optional[str] = None,  with_requirements: Optional[str] = None,
+def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requirements: Optional[str] = None,
               with_compress: bool = False, with_interpreter: bool = False, with_compile: bool = False):
 
     cwd = Path.cwd()
