@@ -5,7 +5,7 @@ import shutil
 import compileall
 import subprocess
 from pathlib import Path
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 
 
 def delete_source(root_path: Path, *,
@@ -27,10 +27,10 @@ def delete_source(root_path: Path, *,
     if not callable(dir_iter_filter):
         dir_iter_filter = None
 
-    def remove_readonly(func: Callable[[Path], None], path: Path, _: Any) -> None:
+    def remove_readonly(func: Callable[[str], Any], path: str, _: Any) -> object:
         """Clear the readonly bit and reattempt the removal."""
         os.chmod(path, stat.S_IWRITE)
-        func(path)
+        return func(path)
 
     def _delete_source(p: Path) -> None:
         """递归的删除根目录下需要删除的文件.
