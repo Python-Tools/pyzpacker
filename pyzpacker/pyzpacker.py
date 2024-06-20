@@ -70,7 +70,7 @@ def _delete_py_source(root_path: Path) -> None:
 
 
 def pyzpacker(source: str, main: str, *, output: Optional[str] = None,  with_requirements: Optional[str] = None,
-              with_compress: bool = False, with_interpreter: bool = False, compile: bool = False):
+              with_compress: bool = False, with_interpreter: bool = False, with_compile: bool = False):
 
     cwd = Path.cwd()
     if output:
@@ -91,7 +91,7 @@ def pyzpacker(source: str, main: str, *, output: Optional[str] = None,  with_req
             source_path,
             temp_module_path
         )
-        if compile:
+        if with_compile:
             for p in temp_module_path.iterdir():
                 compileall.compile_dir(p, force=True, legacy=True, optimize=2)
                 if p.is_dir():
