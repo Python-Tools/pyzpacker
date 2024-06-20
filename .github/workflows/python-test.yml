@@ -31,11 +31,11 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Lint with pep8
         run: |
-          pycodestyle --max-line-length=140 --ignore=E501 --first --statistics schema_entry
+          pycodestyle --max-line-length=140 --ignore=E501 --first --statistics pyzpacker
 
       - name: Type Hint Check
         run: |
-          mypy --ignore-missing-imports --show-column-numbers --follow-imports=silent --check-untyped-defs --disallow-untyped-defs --no-implicit-optional --warn-unused-ignores schema_entry
+          mypy --ignore-missing-imports --show-column-numbers --follow-imports=silent --check-untyped-defs --disallow-untyped-defs --no-implicit-optional --warn-unused-ignores pyzpacker
     #   - name: Unit Test
     #     run: |
     #       python -m coverage run --source=schema_entry -m unittest discover -v -s .
