@@ -8,7 +8,32 @@ on:
     types: [created]
 
 jobs:
-  deploy:
+  pack:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Pack to pyz
+      run: |
+        python __main__.py -m pyzpacker.cmd:main pyzpacker -s -c -p -r requirements.txt -o dist
+    - name: 'Upload pyz'
+      uses: actions/upload-artifact@v3
+      with:
+        name: pyzpackages-${{ matrix.python-version }}
+        path: ./dist/*.pyz
+
+
+  publish:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -20,17 +45,26 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel twine build
+        pip install -r requirements.txt
     - name: Build and publish
       run: |
         python -m build --wheel
     - name: 'Upload dist'
-      uses: 'actions/upload-artifact@v2'
+      uses: 'actions/upload-artifact@v3'
       with:
         name: packages
-        path: dist/*
+        path: dist/*.whl
     - name: Publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run:
-        twine upload dist/*
+        twine upload dist/*.whl
+    - name: Pack to pyz
+      run: |
+        python __main__.py -m pyzpacker.cmd:main pyzpacker -s -c -r requirements.txt -o dist
+    - name: 'Upload pyz'
+      uses: actions/upload-artifact@v3
+      with:
+        name: pyzpackages
+        path: ./dist/*.pyz

@@ -77,8 +77,6 @@ def _delete_py_source(root_path: Path) -> None:
 
 def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requirements: Optional[str] = None,
               with_compress: bool = False, with_shebang: bool = False, with_compile: bool = False) -> None:
-    print(f"""source: {source} main: {main}, output: {output}, with_requirements: {with_requirements},
-              with_compress: {with_compress}, with_shebang: {with_shebang}, with_compile: {with_compile}""")
     cwd = Path.cwd()
     source_path = Path(source)
     module_name = source_path.name
@@ -87,8 +85,11 @@ def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requ
     temp_module_path = temp_path.joinpath(module_name)
     if output:
         output_dir = Path(output)
-        if not output_dir.is_dir():
-            raise AttributeError("output must be a dir")
+        if output_dir.exists():
+            if not output_dir.is_dir():
+                raise AttributeError("output must be a dir")
+        else:
+            output_dir.mkdir(parents=True)
     else:
         output_dir = cwd
     if with_shebang:
