@@ -3,7 +3,9 @@ import stat
 import zipapp
 import shutil
 import compileall
+import platform
 import subprocess
+import chardet
 from pathlib import Path
 from typing import Optional, Callable, Any
 
@@ -18,7 +20,7 @@ def delete_source(root_path: Path, *,
         root_path (Path): [description]
         file_predication (Optional[Callable]): 用于判断文件是否要被删除的谓词,参数为p:path
         dir_predication (Optional[Callable]): 用于判断文件夹是否要被删除的谓词,参数为p:path
-        dir_iter_filter (Optional[Callable]): 用于过夏季目录中不用迭代的部分
+        dir_iter_filter (Optional[Callable]): 用于过滤目录中不用迭代的部分
     """
     if not callable(file_predication):
         file_predication = None
@@ -40,15 +42,21 @@ def delete_source(root_path: Path, *,
         if p.is_file():
             if file_predication and file_predication(p):
                 os.remove(p)
-        else:
+        elif p.is_dir():
             if dir_predication and dir_predication(p):
+                # 文件夹-删除
                 try:
                     shutil.rmtree(p, onerror=remove_readonly)
                 except Exception as e:
-                    print(e)
-            for child_path in filter(dir_iter_filter, p.iterdir()):
-                _delete_source(child_path)
-
+                    print(f"rmtree {p} get error {str(e)}")
+            else:
+                # 文件夹-继续遍历
+                if dir_iter_filter:
+                    iterdir = filter(dir_iter_filter, p.iterdir())
+                else:
+                    iterdir = p.iterdir()
+                for child_path in iterdir:
+                    _delete_source(child_path)
     if any([callable(file_predication), callable(dir_predication)]):
         _delete_source(root_path)
     else:
@@ -63,49 +71,75 @@ def _delete_py_source(root_path: Path) -> None:
     """
     delete_source(
         root_path,
-        file_predication=lambda p: p.suffix == ".py" and p.name not in (
-            "__main__.py", "__init__.py"),
+        file_predication=lambda p: p.suffix == ".py",
         dir_predication=lambda p: p.name == "__pycache__"
     )
 
 
 def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requirements: Optional[str] = None,
-              with_compress: bool = False, with_interpreter: bool = False, with_compile: bool = False) -> None:
-
+              with_compress: bool = False, with_shebang: bool = False, with_compile: bool = False) -> None:
+    print(f"""source: {source} main: {main}, output: {output}, with_requirements: {with_requirements},
+              with_compress: {with_compress}, with_shebang: {with_shebang}, with_compile: {with_compile}""")
     cwd = Path.cwd()
+    source_path = Path(source)
+    module_name = source_path.name
+    pyz_name = module_name
+    temp_path = cwd.joinpath("temp_app")
+    temp_module_path = temp_path.joinpath(module_name)
     if output:
-        output_dir = Path("output")
+        output_dir = Path(output)
+        if not output_dir.is_dir():
+            raise AttributeError("output must be a dir")
     else:
         output_dir = cwd
-
-    if with_interpreter:
+    
+    if with_shebang:
         interpreter = "/usr/bin/env python3"
     else:
         interpreter = None
-    temp_path = cwd.joinpath("temp_app")
+    
     try:
-        source_path = Path(source)
-        module_name = source_path.name
-        temp_module_path = temp_path.joinpath(module_name)
         shutil.copytree(
             source_path,
             temp_module_path
         )
         if with_compile:
-            for p in temp_module_path.iterdir():
-                compileall.compile_dir(p, force=True, legacy=True, optimize=2)
-                if p.is_dir():
-                    _delete_py_source(p)
-
+            compileall.compile_dir(
+                temp_module_path, force=True, legacy=True, optimize=2)
+            _delete_py_source(temp_module_path)
+            python_version_tuple = platform.python_version_tuple()
+            first = python_version_tuple[0]
+            seconde = python_version_tuple[1]
+            pyz_name = f"{module_name}-py{first}.{seconde}"
         if with_requirements:
-            command = 'python -m pip install -r {with_requirements} --target temp_app'
+            command = f'python -m pip install -r {with_requirements} --target temp_app'
             default_environ = dict(os.environ)
-            subprocess.run(command, capture_output=True, shell=True,
+            try:
+                res = subprocess.run(command, capture_output=True, shell=True,
                            check=True, cwd=cwd, env=default_environ)
-
+            except subprocess.CalledProcessError as ce:
+                print(f"""命令: {command} 执行失败""")
+                if ce.stderr:
+                    encoding = chardet.detect(ce.stderr).get("encoding")
+                    content = ce.stderr.decode(encoding).strip()
+                else:
+                    encoding = chardet.detect(ce.stdout).get("encoding")
+                    content = ce.stdout.decode(encoding).strip()
+                    print(content)
+                raise ce
+            except Exception as e:
+                print(f"""命令: {command} 执行失败""")
+                raise e
+            else:
+                content = ""
+                if res.stdout:
+                    encoding = chardet.detect(res.stdout).get("encoding")
+                    content = res.stdout.decode(encoding).strip()
+                    print(content)
+        target = output_dir.joinpath(f"{pyz_name}.pyz")
         zipapp.create_archive(
             temp_path,
-            target=output_dir.joinpath(f"{module_name}.pyz"),
+            target=target,
             interpreter=interpreter,
             main=main,
             compressed=with_compress
