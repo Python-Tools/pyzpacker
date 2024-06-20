@@ -31,5 +31,3 @@ python -m pip install pyzpacker
 pyzpacker [options] -m <指定入口模块> <你的项目目录>
 
 ```
-
-默认查找项目目录下cmd目录下的`main`函数作为入口
