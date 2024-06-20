@@ -38,7 +38,7 @@ platforms = ["all"]
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 readme = {file = ["README.md"], content-type = "text/markdown"}
-version = {attr = "${REPO_NAME_SNAKE}.version.__version__"}
+version = {attr = "pyzpacker.version.__version__"}
 
 [tool.setuptools.packages.find]
 exclude = ['contrib', 'docs', 'test']
