@@ -92,12 +92,11 @@ def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requ
             raise AttributeError("output must be a dir")
     else:
         output_dir = cwd
-    
     if with_shebang:
         interpreter = "/usr/bin/env python3"
     else:
         interpreter = None
-    
+
     try:
         shutil.copytree(
             source_path,
@@ -115,8 +114,14 @@ def pyzpacker(source: str, main: str, *, output: Optional[str] = None, with_requ
             command = f'python -m pip install -r {with_requirements} --target temp_app'
             default_environ = dict(os.environ)
             try:
-                res = subprocess.run(command, capture_output=True, shell=True,
-                           check=True, cwd=cwd, env=default_environ)
+                res = subprocess.run(
+                    command,
+                    capture_output=True,
+                    shell=True,
+                    check=True,
+                    cwd=cwd,
+                    env=default_environ
+                )
             except subprocess.CalledProcessError as ce:
                 print(f"""命令: {command} 执行失败""")
                 if ce.stderr:
