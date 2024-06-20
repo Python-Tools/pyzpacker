@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyzpacker"
+authors = [
+  {name = "hsz", email = "hsz1273327@gmail.com"},
+]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+description = "将纯python项目模块打包为pyz包."
+keywords = ["tool"]
+license = {file = "LICENSE"}
+dynamic = ["version", "readme", "dependencies"]
+requires-python = "~=3.10"
+
+[project.urls]
+changelog = "https://github.com/Python-Tools/pyzpacker/src/branch/main/CHANGELOG.md"
+documentation = "https://github.com/Python-Tools/pyzpacker"
+homepage = "https://github.com/Python-Tools/pyzpacker"
+repository = "https://github.com/Python-Tools/pyzpacker"
+
+[project.optional-dependencies]
+test = ["coverage","mypy", "pycodestyle", "lxml"]
+
+[project.scripts]
+pyzpacker = "pyzpacker.cmd:main"
+
+[tool.setuptools]
+platforms = ["all"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+readme = {file = ["README.md"], content-type = "text/markdown"}
+version = {attr = "${REPO_NAME_SNAKE}.version.__version__"}
+
+[tool.setuptools.packages.find]
+exclude = ['contrib', 'docs', 'test']
+
